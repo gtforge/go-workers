@@ -30,7 +30,6 @@ func Process(queue string, job jobFunc, concurrency int, mids ...Action) {
 
 func Run() {
 	Start()
-	go handleSignals()
 	waitForExit()
 }
 
