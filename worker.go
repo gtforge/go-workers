@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"sync/atomic"
 	"time"
 )
 
@@ -25,15 +26,24 @@ func (w *worker) work(messages chan *Msg) {
 	for {
 		select {
 		case message := <-messages:
-			w.startedAt = time.Now().UTC().Unix()
+			atomic.StoreInt64(&w.startedAt, time.Now().UTC().Unix())
 			w.currentMsg = message
 
 			if w.process(message) {
 				w.manager.confirm <- message
 			}
 
-			w.startedAt = 0
+			atomic.StoreInt64(&w.startedAt, 0)
 			w.currentMsg = nil
+
+			// Attempt to tell fetcher we're finished.
+			// Can be used when the fetcher has slept due
+			// to detecting an empty queue to requery the
+			// queue immediately if we finish work.
+			select {
+			case w.manager.fetch.FinishedWork() <- true:
+			default:
+			}
 		case w.manager.fetch.Ready() <- true:
 			// Signaled to fetcher that we're
 			// ready to accept a message
@@ -57,7 +67,7 @@ func (w *worker) process(message *Msg) (acknowledge bool) {
 }
 
 func (w *worker) processing() bool {
-	return w.startedAt > 0
+	return atomic.LoadInt64(&w.startedAt) > 0
 }
 
 func newWorker(m *manager) *worker {

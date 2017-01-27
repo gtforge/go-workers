@@ -12,28 +12,31 @@ type Fetcher interface {
 	Fetch()
 	Acknowledge(*Msg)
 	Ready() chan bool
+	FinishedWork() chan bool
 	Messages() chan *Msg
 	Close()
 	Closed() bool
 }
 
 type fetch struct {
-	queue    string
-	ready    chan bool
-	messages chan *Msg
-	stop     chan bool
-	exit     chan bool
-	closed   bool
+	queue        string
+	ready        chan bool
+	finishedwork chan bool
+	messages     chan *Msg
+	stop         chan bool
+	exit         chan bool
+	closed       chan bool
 }
 
 func NewFetch(queue string, messages chan *Msg, ready chan bool) Fetcher {
 	return &fetch{
 		queue,
 		ready,
+		make(chan bool),
 		messages,
 		make(chan bool),
 		make(chan bool),
-		false,
+		make(chan bool),
 	}
 }
 
@@ -55,42 +58,49 @@ func (f *fetch) Fetch() {
 
 	f.processOldMessages()
 
-	go (func(c chan string) {
+	go func(c chan string) {
 		for {
+			// f.Close() has been called
 			if f.Closed() {
 				break
 			}
-
 			<-f.Ready()
-
-			(func() {
-				conn := Config.Pool.Get()
-				defer conn.Close()
-
-				message, err := redis.String(conn.Do("brpoplpush", f.queue, f.inprogressQueue(), 1))
-
-				if err != nil {
-					// If redis returns null, the queue is empty. Just ignore the error.
-					if err.Error() != "redigo: nil returned" {
-						Logger.Println("ERR: ", err)
-						time.Sleep(1 * time.Second)
-					}
-				} else {
-					c <- message
-				}
-			})()
+			f.tryFetchMessage(c)
 		}
-	})(messages)
+	}(messages)
 
+	f.handleMessages(messages)
+}
+
+func (f *fetch) handleMessages(messages chan string) {
 	for {
 		select {
 		case message := <-messages:
 			f.sendMessage(message)
 		case <-f.stop:
-			f.closed = true
-			f.exit <- true
-			break
+			// Stop the redis-polling goroutine
+			close(f.closed)
+			// Signal to Close() that the fetcher has stopped
+			close(f.exit)
+			return
 		}
+	}
+}
+
+func (f *fetch) tryFetchMessage(messages chan string) {
+	conn := Config.Pool.Get()
+	defer conn.Close()
+
+	message, err := redis.String(conn.Do("brpoplpush", f.queue, f.inprogressQueue(), 1))
+
+	if err != nil {
+		// If redis returns null, the queue is empty. Just ignore the error.
+		if err.Error() != "redigo: nil returned" {
+			Logger.Println("ERR: ", err)
+			time.Sleep(1 * time.Second)
+		}
+	} else {
+		messages <- message
 	}
 }
 
@@ -119,13 +129,22 @@ func (f *fetch) Ready() chan bool {
 	return f.ready
 }
 
+func (f *fetch) FinishedWork() chan bool {
+	return f.finishedwork
+}
+
 func (f *fetch) Close() {
 	f.stop <- true
 	<-f.exit
 }
 
 func (f *fetch) Closed() bool {
-	return f.closed
+	select {
+	case <-f.closed:
+		return true
+	default:
+		return false
+	}
 }
 
 func (f *fetch) inprogressMessages() []string {
