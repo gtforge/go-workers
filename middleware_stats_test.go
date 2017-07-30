@@ -17,11 +17,11 @@ func MiddlewareStatsSpec(c gospec.Context) {
 	worker := newWorker(manager)
 	message, _ := NewMsg("{\"jid\":\"2\",\"retry\":true}")
 
-	was := Config.Namespace
-	Config.Namespace = "prod:"
+	was := Config().Namespace
+	Config().Namespace = "prod:"
 
 	c.Specify("increments processed stats", func() {
-		conn := Config.Pool.Get()
+		conn := Config().Pool.Get()
 		defer conn.Close()
 
 		count, _ := redis.Int(conn.Do("get", "prod:stat:processed"))
@@ -48,7 +48,7 @@ func MiddlewareStatsSpec(c gospec.Context) {
 		worker := newWorker(manager)
 
 		c.Specify("increments failed stats", func() {
-			conn := Config.Pool.Get()
+			conn := Config().Pool.Get()
 			defer conn.Close()
 
 			count, _ := redis.Int(conn.Do("get", "prod:stat:failed"))
@@ -67,5 +67,5 @@ func MiddlewareStatsSpec(c gospec.Context) {
 		})
 	})
 
-	Config.Namespace = was
+	Config().Namespace = was
 }

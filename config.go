@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"time"
 
+	"sync"
+
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -15,7 +17,24 @@ type config struct {
 	Fetch        func(queue string) Fetcher
 }
 
-var Config *config
+type syncConfig struct {
+	sync.RWMutex
+	*config
+}
+
+var myConfig syncConfig
+
+func Config() *config {
+	myConfig.RLock()
+	defer myConfig.RUnlock()
+	return myConfig.config
+}
+
+func SetConfig(config *config) {
+	myConfig.Lock()
+	defer myConfig.Unlock()
+	myConfig.config = config
+}
 
 func Configure(options map[string]string) {
 	var poolSize int
@@ -42,7 +61,7 @@ func Configure(options map[string]string) {
 
 	poolSize, _ = strconv.Atoi(options["pool"])
 
-	Config = &config{
+	SetConfig(&config{
 		options["process"],
 		namespace,
 		pollInterval,
@@ -76,5 +95,5 @@ func Configure(options map[string]string) {
 		func(queue string) Fetcher {
 			return NewFetch(queue, make(chan *Msg), make(chan bool))
 		},
-	}
+	})
 }

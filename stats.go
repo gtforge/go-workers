@@ -47,16 +47,16 @@ func Stats(w http.ResponseWriter, req *http.Request) {
 		0,
 	}
 
-	conn := Config.Pool.Get()
+	conn := Config().Pool.Get()
 	defer conn.Close()
 
 	conn.Send("multi")
-	conn.Send("get", Config.Namespace+"stat:processed")
-	conn.Send("get", Config.Namespace+"stat:failed")
-	conn.Send("zcard", Config.Namespace+RETRY_KEY)
+	conn.Send("get", Config().Namespace+"stat:processed")
+	conn.Send("get", Config().Namespace+"stat:failed")
+	conn.Send("zcard", Config().Namespace+RETRY_KEY)
 
 	for key, _ := range enqueued {
-		conn.Send("llen", fmt.Sprintf("%squeue:%s", Config.Namespace, key))
+		conn.Send("llen", fmt.Sprintf("%squeue:%s", Config().Namespace, key))
 	}
 
 	r, err := conn.Do("exec")

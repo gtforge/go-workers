@@ -9,11 +9,11 @@ import (
 )
 
 func EnqueueSpec(c gospec.Context) {
-	was := Config.Namespace
-	Config.Namespace = "prod:"
+	was := Config().Namespace
+	Config().Namespace = "prod:"
 
 	c.Specify("Enqueue", func() {
-		conn := Config.Pool.Get()
+		conn := Config().Pool.Get()
 		defer conn.Close()
 
 		c.Specify("makes the queue available", func() {
@@ -90,7 +90,7 @@ func EnqueueSpec(c gospec.Context) {
 
 	c.Specify("EnqueueIn", func() {
 		scheduleQueue := "prod:" + SCHEDULED_JOBS_KEY
-		conn := Config.Pool.Get()
+		conn := Config().Pool.Get()
 		defer conn.Close()
 
 		c.Specify("has added a job in the scheduled queue", func() {
@@ -118,5 +118,5 @@ func EnqueueSpec(c gospec.Context) {
 		})
 	})
 
-	Config.Namespace = was
+	Config().Namespace = was
 }

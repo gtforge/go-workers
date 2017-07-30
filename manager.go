@@ -90,7 +90,7 @@ func (m *manager) queueName() string {
 }
 
 func (m *manager) reset() {
-	m.fetch = Config.Fetch(m.queue)
+	m.fetch = Config().Fetch(m.queue)
 }
 
 func newManager(queue string, job jobFunc, concurrency int, mids ...Action) *manager {
@@ -104,7 +104,7 @@ func newManager(queue string, job jobFunc, concurrency int, mids ...Action) *man
 		}
 	}
 	m := &manager{
-		Config.Namespace + "queue:" + queue,
+		Config().Namespace + "queue:" + queue,
 		nil,
 		job,
 		concurrency,
@@ -117,7 +117,7 @@ func newManager(queue string, job jobFunc, concurrency int, mids ...Action) *man
 		&sync.WaitGroup{},
 	}
 
-	m.fetch = Config.Fetch(m.queue)
+	m.fetch = Config().Fetch(m.queue)
 
 	return m
 }

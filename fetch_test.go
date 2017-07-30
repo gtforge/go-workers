@@ -28,7 +28,7 @@ func FetchSpec(c gospec.Context) {
 		c.Specify("it puts messages from the queues on the messages channel", func() {
 			fetch := buildFetch("fetchQueue2")
 
-			conn := Config.Pool.Get()
+			conn := Config().Pool.Get()
 			defer conn.Close()
 
 			conn.Do("lpush", "queue:fetchQueue2", message.ToJson())
@@ -47,7 +47,7 @@ func FetchSpec(c gospec.Context) {
 		c.Specify("places in progress messages on private queue", func() {
 			fetch := buildFetch("fetchQueue3")
 
-			conn := Config.Pool.Get()
+			conn := Config().Pool.Get()
 			defer conn.Close()
 
 			conn.Do("lpush", "queue:fetchQueue3", message.ToJson())
@@ -67,7 +67,7 @@ func FetchSpec(c gospec.Context) {
 		c.Specify("removes in progress message when acknowledged", func() {
 			fetch := buildFetch("fetchQueue4")
 
-			conn := Config.Pool.Get()
+			conn := Config().Pool.Get()
 			defer conn.Close()
 
 			conn.Do("lpush", "queue:fetchQueue4", message.ToJson())
@@ -91,7 +91,7 @@ func FetchSpec(c gospec.Context) {
 
 			fetch := buildFetch("fetchQueue5")
 
-			conn := Config.Pool.Get()
+			conn := Config().Pool.Get()
 			defer conn.Close()
 
 			conn.Do("lpush", "queue:fetchQueue5", json)
@@ -111,7 +111,7 @@ func FetchSpec(c gospec.Context) {
 			message2, _ := NewMsg("{\"foo\":\"bar2\"}")
 			message3, _ := NewMsg("{\"foo\":\"bar3\"}")
 
-			conn := Config.Pool.Get()
+			conn := Config().Pool.Get()
 			defer conn.Close()
 
 			conn.Do("lpush", "queue:fetchQueue6:1:inprogress", message.ToJson())

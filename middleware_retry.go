@@ -17,7 +17,7 @@ type MiddlewareRetry struct{}
 func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (acknowledge bool) {
 	defer func() {
 		if e := recover(); e != nil {
-			conn := Config.Pool.Get()
+			conn := Config().Pool.Get()
 			defer conn.Close()
 
 			if retry(message) {
@@ -33,7 +33,7 @@ func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (ac
 
 				_, err := conn.Do(
 					"zadd",
-					Config.Namespace+RETRY_KEY,
+					Config().Namespace+RETRY_KEY,
 					nowToSecondsWithNanoPrecision()+waitDuration,
 					message.ToJson(),
 				)

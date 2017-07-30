@@ -19,7 +19,7 @@ func ConfigSpec(c gospec.Context) {
 	}
 
 	c.Specify("sets redis pool size which defaults to 1", func() {
-		c.Expect(Config.Pool.MaxIdle, Equals, 1)
+		c.Expect(Config().Pool.MaxIdle, Equals, 1)
 
 		Configure(map[string]string{
 			"server":  "localhost:6379",
@@ -27,18 +27,18 @@ func ConfigSpec(c gospec.Context) {
 			"pool":    "20",
 		})
 
-		c.Expect(Config.Pool.MaxIdle, Equals, 20)
+		c.Expect(Config().Pool.MaxIdle, Equals, 20)
 	})
 
 	c.Specify("can specify custom process", func() {
-		c.Expect(Config.processId, Equals, "1")
+		c.Expect(Config().processId, Equals, "1")
 
 		Configure(map[string]string{
 			"server":  "localhost:6379",
 			"process": "2",
 		})
 
-		c.Expect(Config.processId, Equals, "2")
+		c.Expect(Config().processId, Equals, "2")
 	})
 
 	c.Specify("requires a server parameter", func() {
@@ -58,7 +58,7 @@ func ConfigSpec(c gospec.Context) {
 	})
 
 	c.Specify("adds ':' to the end of the namespace", func() {
-		c.Expect(Config.Namespace, Equals, "")
+		c.Expect(Config().Namespace, Equals, "")
 
 		Configure(map[string]string{
 			"server":    "localhost:6379",
@@ -66,7 +66,7 @@ func ConfigSpec(c gospec.Context) {
 			"namespace": "prod",
 		})
 
-		c.Expect(Config.Namespace, Equals, "prod:")
+		c.Expect(Config().Namespace, Equals, "prod:")
 	})
 
 	c.Specify("defaults poll interval to 15 seconds", func() {
@@ -75,7 +75,7 @@ func ConfigSpec(c gospec.Context) {
 			"process": "1",
 		})
 
-		c.Expect(Config.PollInterval, Equals, 15)
+		c.Expect(Config().PollInterval, Equals, 15)
 	})
 
 	c.Specify("allows customization of poll interval", func() {
@@ -85,6 +85,6 @@ func ConfigSpec(c gospec.Context) {
 			"poll_interval": "1",
 		})
 
-		c.Expect(Config.PollInterval, Equals, 1)
+		c.Expect(Config().PollInterval, Equals, 1)
 	})
 }
