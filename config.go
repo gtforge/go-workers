@@ -24,10 +24,10 @@ type syncConfig struct {
 
 var myConfig syncConfig
 
-func Config() *config {
+func Config() config {
 	myConfig.RLock()
 	defer myConfig.RUnlock()
-	return myConfig.config
+	return *myConfig.config
 }
 
 func SetConfig(config *config) {
