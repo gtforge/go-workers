@@ -16,11 +16,13 @@ const (
 
 var Logger WorkersLogger = log.New(os.Stdout, "workers: ", log.Ldate|log.Lmicroseconds)
 
-var managers = make(map[string]*manager)
-var schedule *scheduled
-var control = make(map[string]chan string)
-var access sync.Mutex
-var started bool
+var (
+	managers = make(map[string]*manager)
+	schedule *scheduled
+	control  = make(map[string]chan string)
+	access   sync.Mutex
+	started  bool
+)
 
 var Middleware = NewMiddleware(
 	&MiddlewareLogging{},
@@ -37,6 +39,7 @@ func Process(queue string, job jobFunc, concurrency int, mids ...Action) {
 
 func Run() {
 	Start()
+	go handleSignals()
 	waitForExit()
 }
 
