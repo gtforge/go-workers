@@ -31,7 +31,7 @@ jobs:
           go-version: 1.23.9  # Replace with latest available if 1.23.0 is not yet released
 
       - name: Install gospec
-        run: go install github.com/customerio/gospec@latest
+        run: go install github.com/customerio/gospec
 
       - name: Run tests
         run: go test -v ./...
