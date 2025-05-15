@@ -6,7 +6,7 @@ import (
 
 	"github.com/customerio/gospec"
 	. "github.com/customerio/gospec"
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
 type customMid struct {
@@ -72,7 +72,6 @@ func ManagerSpec(c gospec.Context) {
 			c.Expect(manager.mids, Not(Equals), Middleware)
 			c.Expect(len(manager.mids.actions), Equals, len(Middleware.actions)+1)
 		})
-
 	})
 
 	c.Specify("manage", func() {
