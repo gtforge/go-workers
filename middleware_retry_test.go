@@ -1,18 +1,19 @@
 package workers
 
 import (
+	"time"
+
 	"github.com/customerio/gospec"
 	. "github.com/customerio/gospec"
-	"github.com/garyburd/redigo/redis"
-	"time"
+	"github.com/gomodule/redigo/redis"
 )
 
 func MiddlewareRetrySpec(c gospec.Context) {
-	var panicingJob = (func(message *Msg) {
+	panicingJob := (func(message *Msg) {
 		panic("AHHHH")
 	})
 
-	var wares = NewMiddleware(
+	wares := NewMiddleware(
 		&MiddlewareRetry{},
 	)
 
